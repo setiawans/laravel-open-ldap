@@ -73,13 +73,15 @@ class OpenLDAP
      */
     function bind($connection, $rdn, $password)
     {
-        $bind = ldap_bind($connection, $rdn, $password);
- 
-        if ($bind) { 
-            return true;
-        } 
-
-        return false;
+        try {
+            $bind = ldap_bind($connection, $rdn, $password);
+            if ($bind) { 
+                return true;
+            } 
+        } catch (\Exception $e) {
+            return false;
+        }
+        
     }
     
     /**
@@ -124,9 +126,9 @@ class OpenLDAP
      * @param string $adddn
      * @param array $record
      */
-    public function addRecord($connection, $adddn, $record)
+    public function addRecord($adddn, $record)
     {
-        $addProcess = ldap_add($connection, $adddn, $record);
+        $addProcess = ldap_add($this->connection, $adddn, $record);
 
         if ($addProcess) {
             return true;
@@ -143,9 +145,9 @@ class OpenLDAP
      * @param string $modifydn
      * @param array $record
      */
-    public function modifyRecord($connection, $modifydn, $record)
+    public function modifyRecord($modifydn, $record)
     {
-        $modifyProcess = ldap_modify($connection, $modifydn, $record);
+        $modifyProcess = ldap_modify($this->connection, $modifydn, $record);
         
         if ($modifyProcess) {
             return true;
@@ -162,26 +164,26 @@ class OpenLDAP
      * @param string $dn
      * @param boolean $recursive
      */
-    public function deleteRecord($connection, $dn, $recursive = false)
+    public function deleteRecord($dn, $recursive = false)
     {
         if ($recursive == false) { 
-            return (ldap_delete($connection, $dn));
+            return (ldap_delete($this->connection, $dn));
 
         } else {
             // Search for child entries         
-            $sr = ldap_list($connection, $dn, "ObjectClass=*", array(""));
-            $info = ldap_get_entries($connection, $sr);
+            $sr = ldap_list($this->connection, $dn, "ObjectClass=*", array(""));
+            $info = ldap_get_entries($this->connection, $sr);
  
             for ($i=0; $i<$info['count']; $i++) {
                 // Recursive delete child entries - using myldap_delete to recursive deletion
-                $result = myldap_delete($connection, $info[$i]['dn'], $recursive);
+                $result = myldap_delete($this->connection, $info[$i]['dn'], $recursive);
                 if (!$result) {
                     // return status code if deletion fails.
                     return($result);
                 }
             }
             // Delete top dn
-            return(ldap_delete($connection, $dn));
+            return(ldap_delete($this->connection, $dn));
         }
     }
     
@@ -190,9 +192,9 @@ class OpenLDAP
      *
      * @param string $connection
      */
-    public function close($connection) 
+    public function close() 
     {
-        ldap_close($connection);
+        ldap_close($this->connection);
 
         return true;
     }
@@ -203,14 +205,14 @@ class OpenLDAP
      * @param string $identifier
      * @param string $attr
      */
-    public function getUserData($identifier, $attr='')
+    public function getUserData($identifier, $attr = [])
     {
         $ldapFilter = "(&(" . config('ldap.login_attribute') . "=". $identifier . "))";
         if (!is_array($attr)) {
             $attr = array();
         }
 
-        $userInfo = $this->search($this->connection, config('ldap.basedn'), $ldapFilter, $attr);
+        $userInfo = $this->search(config('ldap.basedn'), $ldapFilter, $attr);
     
         if ($userInfo) {
             return $userInfo[0];
@@ -225,8 +227,8 @@ class OpenLDAP
     public function getGroupList()
     {
         $ldapFilter = "(cn=*)";
-        $attr = array("cn", "gidNumber");
-        $info = $this->search($this->connection, config('ldap.groupdn'), $ldapFilter, $attr);
+        $attr = ["cn" => "gidNumber"];
+        $info = $this->search(config('ldap.groupdn'), $ldapFilter, $attr);
 
         $groupList = array();
         foreach ($info as $each)
