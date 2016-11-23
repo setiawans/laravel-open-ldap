@@ -17,7 +17,7 @@ class OpenLDAP
     public function __construct()
     {
         $host = config('ldap.host');
-        $port = config('ldap.port');
+        $port = config('ldap.port', 389);
 
         $this->connection = $this->connect($host, $port);
     }
