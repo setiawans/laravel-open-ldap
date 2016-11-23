@@ -13,7 +13,7 @@
     },
     "autoload": {
         "psr-4": {
-            "setiawans\\openLDAP\\": "src/"
+            "Setiawans\\OpenLDAP\\": "src/"
         }
     },
     "config": {
