@@ -68,12 +68,12 @@ class OpenLDAP
      * Set the connection to LDAP server.
      *
      * @param string $connection
-     * @param string $ldaprdn
+     * @param string $rdn
      * @param string $password
      */
-    function bind($connection, $ldaprdn, $password)
+    function bind($connection, $rdn, $password)
     {
-        $bind = ldap_bind($connection, $ldaprdn, $ldappass);
+        $bind = ldap_bind($connection, $rdn, $password);
  
         if ($bind) { 
             return true;
