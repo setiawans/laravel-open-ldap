@@ -12,7 +12,7 @@ use Log;
  
 class OpenLDAP 
 {
-    private $connection
+    private $connection;
 
     public function __construct()
     {
