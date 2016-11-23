@@ -1,4 +1,4 @@
-<?php namespace Setiawans\OpenLDAP;
+<?php 
 /**
  * PHP OpenLDAP
  * 
@@ -6,6 +6,7 @@
  * @license  http://opensource.org/licenses/MIT
  * @package  PHP openLDAP
  */
+namespace Setiawans\OpenLDAP;
 
 use Log;
  

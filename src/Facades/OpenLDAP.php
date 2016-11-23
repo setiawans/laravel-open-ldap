@@ -7,7 +7,7 @@
  * @package  PHP openLDAP
  */
 
-namespace Setiawans\OpenLDAP\Laravel;
+namespace Setiawans\OpenLDAP\Facade;
 
 use Illuminate\Support\Facades\Facade;
 
