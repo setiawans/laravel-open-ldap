@@ -36,7 +36,7 @@ class OpenLDAP
      */
     function connect($host, $port) 
     {
-        $connection = ldap_connect($server, $port);  // must be a valid LDAP server! 
+        $connection = ldap_connect($host, $port);  // must be a valid LDAP server! 
         ldap_set_option($connection, LDAP_OPT_PROTOCOL_VERSION, 3);
  
         // PHP Reference says there is no control of connection status in OpenLDAP 2.x.x
