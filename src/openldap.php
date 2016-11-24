@@ -20,6 +20,8 @@ class OpenLDAP
         $port = config('ldap.port', 389);
 
         $this->connection = $this->connect($host, $port);
+
+        $this->bind($this->connection, config('ldap.admin_dn'), config('ldap.admin_password'));
     }
 
     public function __destruct()
