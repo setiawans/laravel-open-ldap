@@ -252,6 +252,26 @@ class OpenLDAP
         return $this->groupList[$gidnumber];
     }
 
+    /**
+     * Get next uid LDAP.
+     *
+     */
+    public function getNextUid()
+    {
+        $search = $this->search(config('ldap.dn'),'uidnumber=*');
+
+        if (!count($search)) {
+            return '1000';    
+        }
+
+        $last = $search[$search['count']-1];
+
+        $nextId = $last['uidnumber'][0];
+        $nextId = (int) $nextId + 1;
+
+        return $nextId;
+    }
+
     public function groupIsOK()
     {
         return false;
