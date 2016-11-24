@@ -60,7 +60,7 @@ class OpenLDAP
             return false;
         }
 
-        $ldapRdn = config('ldap.login_attribute') . "=" . $username . "," . config('ldap.basedn');
+        $ldapRdn = config('ldap.login_attribute') . "=" . $username . "," . config('ldap.base_userdn');
         $isConnected = $this->bind($this->connection, $ldapRdn, $password);
 
         return $isConnected;
@@ -214,7 +214,7 @@ class OpenLDAP
             $attr = array();
         }
 
-        $userInfo = $this->search(config('ldap.basedn'), $ldapFilter, $attr);
+        $userInfo = $this->search(config('ldap.base_userdn'), $ldapFilter, $attr);
     
         if ($userInfo) {
             return $userInfo[0];
