@@ -60,7 +60,20 @@ class OpenLDAP
             return false;
         }
 
-        $ldapRdn = config('ldap.login_attribute') . "=" . $username . "," . config('ldap.base_userdn');
+        if (trim(config('ldap.login_attribute')) == '') {
+            if (trim(config('ldap.base_userdn')) == '') {
+                $ldapRdn = $username;
+            } else {
+                $ldapRdn = $username . "," . config('ldap.base_userdn');
+            }
+        } else {
+            if (trim(config('ldap.base_userdn')) == '') {
+                $ldapRdn = config('ldap.login_attribute') . "=" . $username;
+            } else {
+                $ldapRdn = config('ldap.login_attribute') . "=" . $username . "," . config('ldap.base_userdn');
+            }
+        }
+        
         $isConnected = $this->bind($this->connection, $ldapRdn, $password);
 
         return $isConnected;
@@ -209,7 +222,12 @@ class OpenLDAP
      */
     public function getUserData($identifier, $attr = [])
     {
-        $ldapFilter = "(&(" . config('ldap.login_attribute') . "=". $identifier . "))";
+        if (trim(config('ldap.login_attribute')) == '') {
+            $ldapFilter = "(&(" . ldap_escape($identifier) . "))";
+        } else {
+            $ldapFilter = "(&(" . config('ldap.login_attribute') . "=". ldap_escape($identifier) . "))";
+        }
+        
         if (!is_array($attr)) {
             $attr = array();
         }
