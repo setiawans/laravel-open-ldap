@@ -1,7 +1,7 @@
-<?php 
+<?php
 /**
  * PHP OpenLDAP
- * 
+ *
  * @author   Toriq Setiawan <toriqbagus@gmail.com>
  * @license  http://opensource.org/licenses/MIT
  * @package  PHP openLDAP
@@ -9,8 +9,8 @@
 namespace Setiawans\OpenLDAP;
 
 use Log;
- 
-class OpenLDAP 
+
+class OpenLDAP
 {
     private $connection;
 
@@ -26,8 +26,10 @@ class OpenLDAP
 
     public function __destruct()
     {
-        if (! is_null($this->connection))
+        if (!is_null($this->connection)) {
             ldap_unbind($this->connection);
+        }
+
     }
 
     /**
@@ -36,15 +38,15 @@ class OpenLDAP
      * @param string $host
      * @param string $port
      */
-    function connect($host, $port) 
+    public function connect($host, $port)
     {
-        $connection = ldap_connect($host, $port);  // must be a valid LDAP server! 
+        $connection = ldap_connect($host, $port); // must be a valid LDAP server!
         ldap_set_option($connection, LDAP_OPT_PROTOCOL_VERSION, 3);
- 
+
         // PHP Reference says there is no control of connection status in OpenLDAP 2.x.x
         // So we'll use binding function to check connection status.
         return $connection;
- 
+
     }
 
     /**
@@ -73,12 +75,12 @@ class OpenLDAP
                 $ldapRdn = config('ldap.login_attribute') . "=" . $username . "," . config('ldap.base_userdn');
             }
         }
-        
-        $isConnected = $this->bind($this->connection, $ldapRdn, $password);
+
+        $isConnected = $this->bind($this->connection, $username, $password);
 
         return $isConnected;
     }
-    
+
     /**
      * Set the connection to LDAP server.
      *
@@ -86,19 +88,19 @@ class OpenLDAP
      * @param string $rdn
      * @param string $password
      */
-    function bind($connection, $rdn, $password)
+    public function bind($connection, $rdn, $password)
     {
         try {
             $bind = ldap_bind($connection, $rdn, $password);
-            if ($bind) { 
+            if ($bind) {
                 return true;
-            } 
+            }
         } catch (\Exception $e) {
             return false;
         }
-        
+
     }
-    
+
     /**
      * Get data with condition.
      *
@@ -110,12 +112,12 @@ class OpenLDAP
     public function search($searchdn, $filter, $attributes = array())
     {
         $search = ldap_search($this->connection, $searchdn, $filter, $attributes);
- 
+
         if ($search) {
             $info = ldap_get_entries($this->connection, $search);
- 
+
             return $info;
-        } 
+        }
 
         return false;
 
@@ -125,7 +127,7 @@ class OpenLDAP
      * Get count data.
      *
      * @param string $searchdn
-     */    
+     */
     public function countData($search)
     {
         $count = ldap_count_entries($this->connection, $search);
@@ -133,7 +135,7 @@ class OpenLDAP
         return $count;
 
     }
-    
+
     /**
      * Add record to LDAP.
      *
@@ -147,12 +149,12 @@ class OpenLDAP
 
         if ($addProcess) {
             return true;
-        } 
+        }
 
         return false;
 
     }
-    
+
     /**
      * Edit record LDAP.
      *
@@ -163,15 +165,15 @@ class OpenLDAP
     public function modifyRecord($modifydn, $record)
     {
         $modifyProcess = ldap_modify($this->connection, $modifydn, $record);
-        
+
         if ($modifyProcess) {
             return true;
-        } 
+        }
 
         return false;
 
     }
-    
+
     /**
      * Delete record LDAP.
      *
@@ -181,33 +183,33 @@ class OpenLDAP
      */
     public function deleteRecord($dn, $recursive = false)
     {
-        if ($recursive == false) { 
+        if ($recursive == false) {
             return (ldap_delete($this->connection, $dn));
 
         } else {
-            // Search for child entries         
+            // Search for child entries
             $sr = ldap_list($this->connection, $dn, "ObjectClass=*", array(""));
             $info = ldap_get_entries($this->connection, $sr);
- 
-            for ($i=0; $i<$info['count']; $i++) {
+
+            for ($i = 0; $i < $info['count']; $i++) {
                 // Recursive delete child entries - using myldap_delete to recursive deletion
                 $result = myldap_delete($this->connection, $info[$i]['dn'], $recursive);
                 if (!$result) {
                     // return status code if deletion fails.
-                    return($result);
+                    return ($result);
                 }
             }
             // Delete top dn
-            return(ldap_delete($this->connection, $dn));
+            return (ldap_delete($this->connection, $dn));
         }
     }
-    
+
     /**
      * Close connection to LDAP.
      *
      * @param string $connection
      */
-    public function close() 
+    public function close()
     {
         ldap_close($this->connection);
 
@@ -225,17 +227,17 @@ class OpenLDAP
         if (trim(config('ldap.login_attribute')) == '') {
             $ldapFilter = "(&(" . ldap_escape($identifier) . "))";
         } else {
-            $ldapFilter = "(&(" . config('ldap.login_attribute') . "=". ldap_escape($identifier) . "))";
+            $ldapFilter = "(&(" . config('ldap.login_attribute') . "=" . ldap_escape($identifier) . "))";
         }
-        
+
         if (!is_array($attr)) {
             $attr = array();
         }
 
         $userInfo = $this->search(config('ldap.base_userdn'), $ldapFilter, $attr);
-    
+
         if ($userInfo) {
-            return $userInfo[0];
+            return $userInfo;
         } else {
             return false;
         }
@@ -251,10 +253,11 @@ class OpenLDAP
         $info = $this->search(config('ldap.groupdn'), $ldapFilter, $attr);
 
         $groupList = array();
-        foreach ($info as $each)
-        {
-            if (!empty($each["cn"][0]))
+        foreach ($info as $each) {
+            if (!empty($each["cn"][0])) {
                 $groupList[] = $each["cn"][0];
+            }
+
         }
 
         return $groupList;
@@ -276,13 +279,13 @@ class OpenLDAP
      */
     public function getNextUid()
     {
-        $search = $this->search(config('ldap.dn'),'uidnumber=*');
+        $search = $this->search(config('ldap.dn'), 'uidnumber=*');
 
         if (!count($search)) {
-            return '1000';    
+            return '1000';
         }
 
-        $last = $search[$search['count']-1];
+        $last = $search[$search['count'] - 1];
 
         $nextId = $last['uidnumber'][0];
         $nextId = (int) $nextId + 1;
@@ -294,7 +297,5 @@ class OpenLDAP
     {
         return false;
     }
- 
+
 }
- 
-?>
